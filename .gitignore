@@ -1,0 +1,17 @@
+instance/*
+!instance/.gitignore
+.webassets-cache
+
+# Virtual environment
+myvirtualenv/
+
+# Environment variables
+.env
+instance/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# IDE / editor settings (optional)
+.vscode/
