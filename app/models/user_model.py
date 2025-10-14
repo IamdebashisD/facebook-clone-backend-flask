@@ -1,10 +1,9 @@
 from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.ext.declarative import declarative_base
+from app.database.db import Base
 import datetime
 import uuid
 import bcrypt
 
-Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users" # Table name in database
