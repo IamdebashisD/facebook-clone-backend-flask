@@ -1,10 +1,9 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from app.database.db import Base
 import uuid
 import datetime
 
-Base = declarative_base()
 
 class Post(Base):
     __tablename__ = "posts"
