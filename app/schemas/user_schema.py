@@ -25,20 +25,26 @@ class UserSchema(Schema):
         validate=validate.Length(min=6),
         error_messages={
             "required": "Password is required.",
-            "null": "Password cannot be null.",
             "invalid": "Password must be at least 6 characters long."
         }
     )
     created_at = fields.DateTime(dump_only=True)
     
     
-    
-    
-    
-'''optional validation logic'''
-@validates("username")
-def validation_check(self, value):
-    if " " in value:
-        raise ValidationError("User cannot contain spaces.")
-    if not value.isalnum():
-        raise ValidationError("Username should contain only letters and numbers.")
+    '''optional validation logic'''
+    @validates("username")
+    @staticmethod
+    # FIX: Add **kwargs to the function signature
+    def validation_check(value, **kwargs):
+        if " " in value:
+            raise ValidationError("User cannot contain spaces.")
+        if not value.isalnum():
+            raise ValidationError("Username should contain only letters and numbers.")
+        
+    @validates('password')
+    @staticmethod
+    def password_check(value, **kwargs):
+        if len(value) < 6:
+            return "Password is too weak!"
+        else:
+            return "Password is too strong..."
