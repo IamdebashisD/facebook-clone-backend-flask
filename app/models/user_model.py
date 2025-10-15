@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, String, DateTime
+from sqlalchemy.orm import relationship
 from app.database.db import Base
 import datetime
 import uuid
@@ -13,6 +14,10 @@ class User(Base):
     email: str = Column(String(100), nullable=False, unique=True)
     _password: str = Column("password", String(255), nullable=False)
     created_at: datetime.datetime = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    
+    posts = relationship("Post", backref="user", cascade="all, delete-orphan")
+    comments = relationship("Comment", backref="user", cascade="all, delete-orphan")
+    likes = relationship("User", backref="user", cascade="all, delete-orphan")
     
     def __init__(self, username: str, email: str, password: str)-> None:
         self.username = username
@@ -37,5 +42,5 @@ class User(Base):
         )  
     
     def __repr__(self) -> str:
-        return f"<User(id={self.id}, username={self.username}, email={self.email})>"
+        return f"<User(ID={self.id}, USERNAME={self.username}, EMAIL={self.email})>"
         
