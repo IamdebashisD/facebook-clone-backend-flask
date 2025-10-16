@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify, Response
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, Query
 from app.database.db import SessionLocal
 from app.models.user_model import User
@@ -24,8 +25,11 @@ def register() -> Response:
             
         # Validate & deserialize input
         validate_input: dict = user_schema.load(data)
+
+        existing_user: Query = session.query(User).filter(
+            or_(User.email == validate_input['email'], User.username == validate_input['username'])
+        ).first()
         
-        existing_user: Query = session.query(User).filter(User.email == data['email'] or User.username == data['username']).first()
         if existing_user:
             return jsonify({
                 "error_code": True,
@@ -45,7 +49,7 @@ def register() -> Response:
         }), 201
 
     except Exception as e:
-        return ({
+        return jsonify({
             "error_code": True,
             "message": "Registration failed",
             "data": str(e)
