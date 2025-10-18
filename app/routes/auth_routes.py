@@ -8,7 +8,7 @@ from typing import Dict, Any
 
 
 '''create Blueprint'''
-auth_bp = Blueprint("auth_bp", __name__ , url_prefix="/api/auth")
+auth_bp = Blueprint("auth_bp", __name__ , url_prefix="/api/v1/auth")
 
 
 user_schema: UserSchema = UserSchema()          # Initialize schema 
@@ -64,7 +64,7 @@ def register() -> Response:
 '''<------  Login Route  ------>'''
 from app.utils.jwt_helper import create_access_token, create_refresh_token, decode_token
 
-@auth_bp.route("/login", Methods=['POST'])
+@auth_bp.route("/login", methods=['POST'])
 def login() -> Response:
     session: Session = SessionLocal()               # Initialize db
     try:
@@ -104,7 +104,7 @@ def login() -> Response:
                 
                 "access_token": access_token,
                 "refresh_token": refresh_token,
-                "token_type": "bearer"
+                "token_type": "Bearer"
             }
         }), 200
             
