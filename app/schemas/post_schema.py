@@ -5,6 +5,13 @@ class PostSchema(Schema):
     Schema for validating and serializing Post data.
     '''
     id = fields.Str(dump_only=True)
+    title = fields.Str(
+        required=True,
+        validate=validate.Length(min=1, max=255),
+        error_messages={
+            "required": "Title is required"
+        }
+    )
     content = fields.Str(
         required=True,
         validate=validate.Length(min=1, max=2000),
