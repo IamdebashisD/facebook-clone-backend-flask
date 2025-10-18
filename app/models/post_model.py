@@ -9,7 +9,7 @@ class Post(Base):
     __tablename__ = "posts"
     
     id: str = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    
+    title: str = Column(String(255), nullable=False)
     content: str = Column(Text, nullable=False)
     user_id: str = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     created_at: datetime.datetime = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
