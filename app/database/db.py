@@ -19,6 +19,21 @@ SessionLocal: sessionmaker[Session] = scoped_session(sessionmaker(bind=engine))
 # Base class for ORM Models
 Base: declarative_base = declarative_base()
 
+''' Context manager for automatic session cleanup'''
+from contextlib import contextmanager
+@contextmanager
+def get_db():
+    try:
+        session = SessionLocal()
+        yield session
+        session.commit()             # commit if everything goes well
+    except:
+        session.rollback()           # rollback en error
+        raise
+    finally:
+        session.close()              # always close session
+
+
 def test_db_connection():
     try:
         with engine.connect() as connection:
