@@ -17,7 +17,7 @@ class User(Base):
     
     posts = relationship("Post", backref="user", cascade="all, delete-orphan")
     comments = relationship("Comment", backref="user", cascade="all, delete-orphan")
-    likes = relationship("User", backref="user", cascade="all, delete-orphan")
+    likes = relationship("Like", backref="user", cascade="all, delete-orphan")
     
     def __init__(self, username: str, email: str, password: str)-> None:
         self.username = username
