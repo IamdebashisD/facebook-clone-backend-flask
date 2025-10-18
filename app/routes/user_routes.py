@@ -1,59 +1,77 @@
-from flask import Blueprint, request, jsonify, Response
-from sqlalchemy import or_
-from sqlalchemy.orm import Session, Query
+from flask import Blueprint, request, jsonify, Response , g
 from app.database.db import SessionLocal
 from app.models.user_model import User
-from app.schemas.user_schema import UserSchema
+from app.schemas.user_schema import UserSchema, ValidationError
+from sqlalchemy.orm import Session, Query
+from app.utils.token_required import token_required 
+from typing import Dict
 
-'''create Blueprint'''
-auth_bp = Blueprint("auth_bp", __name__ , url_prefix="/api/auth")
+user_bp = Blueprint("user_bp", __name__, url_prefix="/api/v1/user")
 
+@user_bp.route("/profile", methods=['GET'])
+@token_required
+def get_user() -> Response:
+    current_user = g.current_user
+    return jsonify({
+        "error_code": False,
+        "message": "User profile fetched successfully",
+        "data": {
+            "id": current_user.id,
+            "username": current_user.username,
+            "email": current_user.email
+        }
+    }), 200
 
-user_schema: UserSchema = UserSchema()          # Initialize schema 
-session: Session = SessionLocal()               # Initialize db
+    """User profile route and update route
 
-@auth_bp.route("/register", methods=['POST'])
-def register() -> Response:
+    Returns:
+        _type_: return json data 
+    """
+
+@user_bp.route("/updated", methods=['PUT'])
+@token_required
+def update_user() -> Response:
+    session: Session = SessionLocal()
+    user_schema: UserSchema = UserSchema()
+    current_user: User = g.current_user
+    
     try:
-        data: dict = request.get_json()
+        data: Dict = request.get_json()
         if not data:
-            return jsonify({
-                "error_code": True, 
-                "message": "Invalid JSON data!", 
-                "data": None
-            }), 400
-            
-        # Validate & deserialize input
-        validate_input: dict = user_schema.load(data)
-
-        existing_user: Query = session.query(User).filter(
-            or_(User.email == validate_input['email'], User.username == validate_input['username'])
-        ).first()
+            return jsonify({"error_code": True, "message": "No data provided!", "data": []})
         
-        if existing_user:
-            return jsonify({
-                "error_code": True,
-                "message": "Username or email already exists",
-                "data": None
-            }), 400
-            
-        # Create new user instance
-        new_user: User = User(**validate_input)
-        session.add(new_user)
+        validation_data = user_schema.load(request.json, partial=True)
+        
+        for key, value in validation_data.items():
+            if key == "password":
+                current_user.password = value
+            elif hasattr(current_user, key):
+                setattr(current_user, key, value)
+               
+        session.add(current_user)
         session.commit()
         
         return jsonify({
-            "error_code": False,
-            "message": "User registered successfully",
-            "data": user_schema.dump(new_user),
-        }), 201
-
-    except Exception as e:
+            "Error": False,
+            "message": "Updated successfully.",
+            "data": user_schema.dump(current_user)
+        }), 200
+        
+    except ValidationError as VE:
         return jsonify({
             "error_code": True,
-            "message": "Registration failed",
+            "message": "Validation failed",
+            "data": VE.messages
+        })
+    except Exception as e:
+        session.rollback()
+        return jsonify({
+            "error": True, 
+            "message": "Update failed!", 
             "data": str(e)
-        }), 500
-        
+        })
     finally:
         session.close()
+        
+        
+           
