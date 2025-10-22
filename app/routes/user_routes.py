@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, Response , g
+from flask import Flask, Blueprint, request, jsonify, Response , g
 from app.database.db import SessionLocal
 from app.models.user_model import User
 from app.schemas.user_schema import UserSchema, ValidationError
