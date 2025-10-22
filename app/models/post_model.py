@@ -20,5 +20,5 @@ class Post(Base):
     
     # representation for debugging
     def __repr__(self) -> str:
-        return f"<Post(ID={self.id}, CONTENT={self.content[:20]}, USER_ID={self.user_id})>"
+        return f"<Post(ID={self.id}, TITLE={self.title}, CONTENT={self.content[:20]}, USER_ID={self.user_id})>"
     
