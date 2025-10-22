@@ -144,7 +144,7 @@ def refresh_token() -> Response:
         return jsonify({
             "error_code": False,
             "message": "Access token refreshed successfully",
-             "data": {"access_token": new_access_token, "token_type": "bearer"}
+            "data": {"access_token": new_access_token, "token_type": "Bearer"}
         }), 200
         
     except Exception as e:
