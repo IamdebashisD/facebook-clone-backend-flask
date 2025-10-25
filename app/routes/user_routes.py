@@ -11,16 +11,32 @@ user_bp = Blueprint("user_bp", __name__, url_prefix="/api/v1/user")
 @user_bp.route("/profile", methods=['GET'])
 @token_required
 def get_user() -> Response:
-    current_user = g.current_user
-    return jsonify({
-        "error_code": False,
-        "message": "User profile fetched successfully",
-        "data": {
-            "id": current_user.id,
-            "username": current_user.username,
-            "email": current_user.email
-        }
-    }), 200
+    try:
+        current_user = g.current_user
+        
+        if not current_user:
+            return jsonify({
+                "error_code": True,
+                "message": "User not found and unauthorized!",
+                "data": None
+            }), 400
+            
+        return jsonify({
+            "error_code": False,
+            "message": "User profile fetched successfully",
+            "data": {
+                "id": current_user.id,
+                "username": current_user.username,
+                "email": current_user.email
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            "error_code": True,
+            "message": "Failed to fetch user profile!",
+            "data": str(e)
+        }), 500
 
     """User profile route and update route
 
@@ -40,12 +56,17 @@ def update_user() -> Response:
         if not data:
             return jsonify({"error_code": True, "message": "No data provided!", "data": []})
         
+        if "password" in data and data.get("password"):
+            return jsonify({
+                "error_code": True,
+                "message": "Password cannot be updated from this route.",
+                "data": None
+            })
+        
         validation_data = user_schema.load(request.json, partial=True)
         
         for key, value in validation_data.items():
-            if key == "password":
-                current_user.password = value
-            elif hasattr(current_user, key):
+            if hasattr(current_user, key):
                 setattr(current_user, key, value)
                
         session.add(current_user)
