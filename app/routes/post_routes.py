@@ -29,9 +29,9 @@ def upload_post() -> Response:
         validate_data = post_schema.load(data)
         
         new_post = Post(
-            title= validate_data["title"],
-            content= validate_data["content"],
-            user_id= current_user.id
+            title = validate_data["title"],
+            content = validate_data["content"],
+            user_id = current_user.id
         )
         print("new_post ---->> ",new_post)
         
