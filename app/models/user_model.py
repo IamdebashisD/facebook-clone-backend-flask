@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, DateTime
 from sqlalchemy.orm import relationship
 from app.database.db import Base
-import datetime
+from datetime import datetime, timezone
 import uuid
 import bcrypt
 
@@ -13,7 +13,7 @@ class User(Base):
     username: str = Column(String(50), nullable=False, unique=True)
     email: str = Column(String(100), nullable=False, unique=True)
     _password: str = Column("password", String(255), nullable=False)
-    created_at: datetime.datetime = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    created_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     
     posts = relationship("Post", backref="user", cascade="all, delete-orphan")
     comments = relationship("Comment", backref="user", cascade="all, delete-orphan")
