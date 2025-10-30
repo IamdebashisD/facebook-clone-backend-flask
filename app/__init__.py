@@ -10,6 +10,7 @@ import app.models.user_model
 import app.models.post_model
 import app.models.like_model
 import app.models.comment_model
+import app.models.token_blacklist_model
 
 def create_app():
     app = Flask(__name__)
