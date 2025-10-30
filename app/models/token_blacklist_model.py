@@ -9,8 +9,8 @@ class TokenBlacklist(Base):
     
     id: str = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     token: str = Column(Text, nullable=False, unique=True)              # JWT string
-    user_id: str =  Column(String(36), nullable=False)
     token_type: str = Column(String(10), nullable=False)
+    user_id: str =  Column(String(36), nullable=False)
     blacklisted_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     expires_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     reason: str = Column(String(100), default="logout", nullable=True)
