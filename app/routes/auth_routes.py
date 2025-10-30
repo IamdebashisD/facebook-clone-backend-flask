@@ -125,8 +125,9 @@ def login() -> Response:
 # ------ Route refresh token -------- 
 @auth_bp.route("/refresh", methods=['POST'])
 def refresh_token() -> Response:
+    session: Session = SessionLocal()
     try:
-        data: Dict = request.get_json()
+        data: Dict = request.get_json() or {}
         
         if not data or not data.get("refresh_token"):
             return jsonify({
@@ -136,11 +137,30 @@ def refresh_token() -> Response:
             })
 
         refresh_token = data.get("refresh_token")
+        # Decode the refresh token
         payload: Dict = decode_token(refresh_token)
 
         if not payload or payload.get("type") != "refresh":
             return jsonify({"error_code": True, "message": "Invalid refresh token"}), 401
         
+        # Check if token is blacklisted
+        blacklisted = session.query(TokenBlacklist).filter_by(token=refresh_token).first()
+        if blacklisted:
+            return jsonify({
+                "error_code": True,
+                "message": "Refresh token has been revoked or blacklisted",
+                "data": None
+            }), 401
+        
+        # Verify that the user still exists
+        user = session.query(User).filter_by(id=payload["user_id"]).first()
+        if not user:
+            return api_response(True, "User not found or deleted", None, 404)
+        
+        # (Optional) verify token belongs to same user
+        if str(user.id) != str(payload["user_id"]):
+            return api_response(True, "Token does not belong to this user", 401)
+            
         new_access_token = create_access_token({
             "user_id": payload['user_id'], "email": payload['email']
         })
@@ -157,9 +177,11 @@ def refresh_token() -> Response:
             "message": "Failed to refresh token",
             "data": str(e)
         }), 500
+    finally:
+        session.close()
 
 
-        
+
 """
     Route for log out
 """
@@ -169,28 +191,74 @@ def logout():
     session = SessionLocal()
     current_user = g.current_user
     try:
-        token = request.headers.get('Authorization')
-        if not token:
-            return api_response(True, "Token is missing", [], 401)
+        '''
+            Handle access token from headers
+        '''
+        access_token = request.headers.get('Authorization')
+        if not access_token:
+            return api_response(True, "Access token is missing", [], 401)
             
-        token = token.split(" ")[1] if " " in token else token
+        access_token = access_token.split(" ")[1] if " " in access_token else access_token
         
-        payload: dict = decode_token(token)
-        token_type = payload.get("type", "access")
-        exp_timestamp = payload.get("exp")
-        expires_at = datetime.datetime.utcfromtimestamp(exp_timestamp)
+        # Decode the access token
+        decode_access: dict = decode_token(access_token)
+        if not decode_access or decode_access.get("type") != "access":
+            return api_response(True, "Invalid access token!", 401)
         
-        '''add to TokenBlacklist'''
-        blacklisted_token = TokenBlacklist(
-            token = token,
+        token_type_access = decode_access.get("type", "access")
+        exp_timestamp = decode_access.get("exp")
+        expires_access = datetime.datetime.fromtimestamp(exp_timestamp, datetime.timezone.utc)
+        
+        # Checking if token already exists or not
+        exist_access_token =  session.query(TokenBlacklist).filter_by(token = access_token).first()
+        if exist_access_token:
+            return api_response(True, "Access token already blacklisted", [], 401)
+        
+        # add to TokenBlacklist
+        blacklisted_access_token = TokenBlacklist(
+            token = access_token,
+            token_type = token_type_access,
             user_id = str(current_user.id),
-            token_type = token_type,
-            expires_at = expires_at,
+            expires_at = expires_access,
             reason = "logout"
         )        
-        session.add(blacklisted_token)
+        session.add(blacklisted_access_token)
+        
+        
+        ''' 
+            Handle refresh token from body
+        '''
+        data = request.get_json() or {}
+        refresh_token = data.get("refresh_token")
+        if not refresh_token:
+            return api_response(True, "Refresh token is missing!", [], 401)
+        
+        # Decode the refresh token
+        decode_refresh: dict = decode_token(refresh_token)
+        if not decode_refresh or decode_refresh.get("type") != "refresh":
+            return api_response(True, "Invalid refresh token!", 401)
+        
+        token_type_refresh = decode_refresh.get("type", "refresh")
+        exp_timestamp = decode_refresh.get("exp")
+        expires_refresh = datetime.datetime.fromtimestamp(exp_timestamp, datetime.timezone.utc)
+        
+        # Checking if token already exists or not
+        exist_refresh_token =  session.query(TokenBlacklist).filter_by(token = refresh_token).first()
+        if exist_refresh_token:
+            return api_response(True, "Refresh token already blacklisted", [], 401)
+        
+        # add to TokenBlacklist
+        blacklisted_refresh_token = TokenBlacklist(
+            token=refresh_token,
+            token_type = token_type_refresh,
+            user_id = str(current_user.id),
+            expires_at = expires_refresh,
+            reason = "logout"
+        )
+        session.add(blacklisted_refresh_token)
+        
         session.commit()
-        return api_response(False, "User logged out successfully", [], 200)
+        return api_response(False, "User logged out successfully, Both tokens revoked", [], 200)
     
     except Exception as e:
         session.rollback()
