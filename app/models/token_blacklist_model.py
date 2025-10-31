@@ -8,7 +8,7 @@ class TokenBlacklist(Base):
     __tablename__ = 'token_blacklist'
     
     id: str = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    token: str = Column(Text, nullable=False, unique=True)              # JWT string
+    token: str = Column(String(512), nullable=False, unique=True)              # JWT string
     token_type: str = Column(String(10), nullable=False)                # Token Type (access or refresh)
     user_id: str =  Column(String(36), nullable=False)
     blacklisted_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
