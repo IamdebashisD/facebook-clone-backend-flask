@@ -16,14 +16,33 @@ This repository documents my learning, progress, and the real-world features I�
 - Built confidence with Python scripting and understanding program flow.
 
 ### ⚙️ Phase 2 — Exploring Flask
-- Built my **first CRUD application** using Flask and MySQL.
-- Learned about **routes**, **requests**, and **responses**.
+- Built my **first BLOG application** using Flask and MySQL.
+- Learned about **models**, **routes**, **requests**, and **responses**.
 - Added **email functionality** using **Flask-Mail**.
 
 ### 🧩 Phase 3 — Structuring a Real Application
 - Created a clean, modular Flask structure:
 
+## 🧰 Technologies Used
+
+**Backend:**
+- Python
+- Flask
+- SQLAlchemy
+- Marshmallow
+- Flask-Mail
+- bcrypt (for password hashing)
+- JWT (for authentication)
+
+**Database:**
+- MySQL
+
+**Others:**
+- Virtualenv
+- dotenv (for environment variables)
+
+
 ## 🤝 Connect with Me
-- GitHub: [IamdebashisD](https://github.com/IamdebashisD)  
-- LinkedIn: [Debashis Das](https://www.linkedin.com/in/debashis-das-b18803353/)
-- Email: adebashisdas626@gmail.com
+- **GitHub**: [IamdebashisD](https://github.com/IamdebashisD)  
+- **LinkedIn**: [Debashis Das](https://www.linkedin.com/in/debashis-das-b18803353/)
+- **Email**: adebashisdas626@gmail.com
