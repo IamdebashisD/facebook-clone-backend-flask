@@ -210,7 +210,7 @@ def logout():
         expires_access = datetime.datetime.fromtimestamp(exp_timestamp, datetime.timezone.utc)
         
         # Checking if token already exists or not
-        exist_access_token =  session.query(TokenBlacklist).filter_by(token = access_token).first()
+        exist_access_token = session.query(TokenBlacklist).filter_by(token = access_token).first()
         if exist_access_token:
             return api_response(True, "Access token already blacklisted", [], 401)
         
@@ -249,7 +249,7 @@ def logout():
         
         # add to TokenBlacklist
         blacklisted_refresh_token = TokenBlacklist(
-            token=refresh_token,
+            token = refresh_token,
             token_type = token_type_refresh,
             user_id = str(current_user.id),
             expires_at = expires_refresh,
