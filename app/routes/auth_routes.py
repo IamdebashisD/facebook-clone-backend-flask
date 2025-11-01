@@ -10,6 +10,7 @@ from app.utils.token_required import token_required
 from app.models.token_blacklist_model import TokenBlacklist
 import datetime
 from app.utils.response_helper import api_response
+from app.utils.email_helper import send_welcome_message
 
 
 '''create Blueprint'''
@@ -48,7 +49,14 @@ def register() -> Response:
         new_user: User = User(**validate_input)
         session.add(new_user)
         session.commit()
-        
+                
+        # Send welcome message
+        try:
+            send_welcome_message(new_user.email, new_user.username)
+            print("Email sent successfully.")
+        except Exception as e:
+            print(f"Email sending failed: {str(e)}")
+
         return jsonify({
             "error_code": False,
             "message": "User registered successfully",
