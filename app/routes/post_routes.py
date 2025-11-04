@@ -4,6 +4,7 @@ from app.schemas.post_schema import PostSchema
 from app.database.db import SessionLocal
 from app.utils.token_required import token_required
 from sqlalchemy.orm import Session, Query
+from sqlalchemy import or_, desc
 from marshmallow import ValidationError
 from app.utils.response_helper import api_response
 
@@ -111,5 +112,84 @@ def delete_post(post_id) -> Response:
         session.rollback()
         return api_response(True, "Failed to delete post", str(e), 500)
     
+    finally:
+        session.close()
+        
+
+@post_bp.route("/get_all_posts", methods=['GET'])
+@token_required
+def get_all_post():
+    """
+    Get all posts with optional search, sorting, and pagination.
+
+    ---
+    == Description: ==
+    This endpoint retrieves a list of posts from the database.
+    It supports search filtering by title or content, sorts posts by creation date
+    (newest first), and allows pagination through query parameters.
+
+    == Query Parameters: ==
+    - `page` (int, optional): Page number to retrieve (default: 1)
+    - `per_page` (int, optional): Number of posts per page (default: 10)
+    - `search` (string, optional): Keyword to filter posts by title or content
+
+    == Headers: ==
+    - `Authorization`: Bearer token required for authentication
+
+    == Responses: ==
+    - `200 OK`: Returns list of posts with pagination info
+    - `404 Not Found`: No posts found for the given filters
+    - `400 Bad Request`: Invalid pagination parameters
+    - `500 Internal Server Error`: Unexpected server error
+    """
+    session = SessionLocal()
+    try:
+        try:     
+            # Get query parameters (default: page=1, per_page=10)
+            page = int(request.args.get("page", 1))
+            per_page = int(request.args.get("per_page", 10))
+        except ValueError:
+            return api_response(True, "Invalid paginatin parameter", [], 400)
+        # Get query param for search (default: search=None)
+        search = request.args.get("search", None)
+        
+        # Build Base query
+        query = session.query(Post)
+        
+        if search:
+            query = query.filter(
+                or_(Post.title.ilike(f'%{search}%'), Post.content.ilike(f'%{search}%'))
+            )
+        # Apply sorting (latest first)
+        query = query.order_by(desc(Post.created_at))
+        
+        # Count total records before pagination
+        total = query.count()
+        
+        # Apply pagination here
+        posts = query.offset((page -1) * per_page).limit(per_page).all()
+        if not posts:
+            return api_response(False, "No posts found", [], 404)
+        
+        # Serialize post via marshmallow schema
+        post_schema = PostSchema(many=True)
+        post_data = post_schema.dump(posts)
+        
+        return api_response(
+            False,
+            "Fetch all post successfully.",
+            {
+                "post_data": post_data,
+                "pagination": {
+                    "page": page,
+                    "per_page": per_page,
+                    "total": total
+                },
+            },
+            200
+        )
+    except Exception as e:
+        session.rollback()
+        return api_response(True, "Failed to fetch posts!", str(e), 500)
     finally:
         session.close()
