@@ -193,3 +193,31 @@ def get_all_post():
         return api_response(True, "Failed to fetch posts!", str(e), 500)
     finally:
         session.close()
+        
+        
+@post_bp.route("/get_post_byId/<string:post_id>", methods=['GET'])
+@token_required
+def get_post_byID(post_id):
+    """
+    Get a single Post by ID
+    """
+    session = SessionLocal()
+    try:
+        # Fetch post by Id
+        post = session.query(Post).filter_by(id==post_id).first()
+        
+        # Handle case: post not found
+        if not post:
+            return api_response(True, "No post found", [], 404)
+
+        # Serialize post via marshmallow schema
+        post_data = PostSchema(many=True).dump(post) 
+
+        return api_response(False, "Post fetched successfully", post_data, 200)
+    
+    
+    except Exception as e:
+        session.rollback()
+        return api_response(True, "Failed to fetch post", str(e), 500)
+    finally:
+        session.close()
