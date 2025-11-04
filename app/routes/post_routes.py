@@ -204,14 +204,14 @@ def get_post_byID(post_id):
     session = SessionLocal()
     try:
         # Fetch post by Id
-        post = session.query(Post).filter_by(id==post_id).first()
+        post = session.query(Post).filter(Post.id==post_id).first()
         
         # Handle case: post not found
         if not post:
             return api_response(True, "No post found", [], 404)
 
         # Serialize post via marshmallow schema
-        post_data = PostSchema(many=True).dump(post) 
+        post_data = PostSchema().dump(post) 
 
         return api_response(False, "Post fetched successfully", post_data, 200)
     
