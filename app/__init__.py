@@ -11,7 +11,7 @@ from app.config import Config
 import app.models.user_model
 import app.models.post_model
 import app.models.like_model
-import app.models.comment_model
+import app.models.comment_model 
 import app.models.token_blacklist_model
 
 # create a instance of flask mail
