@@ -1,10 +1,10 @@
 from marshmallow import Schema, fields, validate
 
 class CommentSchema(Schema):
+    class Meta:
+        ordered = True
     
     id = fields.Str(dump_only=True)
-    created_at = fields.DateTime(dump_only=True)
-    
     post_id = fields.Str(required=True)
     user_id = fields.Str(dump_only=True)
     
@@ -15,3 +15,5 @@ class CommentSchema(Schema):
             "required": "Content is required",
         }
     )
+    created_at = fields.DateTime(dump_only=True)
+    updated_at = fields.DateTime(dump_only=True)
