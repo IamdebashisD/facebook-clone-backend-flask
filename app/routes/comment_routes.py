@@ -46,3 +46,52 @@ def add_comment():
     
     finally:
         session.close()
+     
+        
+@comment_bp.route("/get_by_post/<string:post_id>", methods=['GET'])
+@token_required
+def get_comments_by_post(post_id):
+    session = SessionLocal()
+    try:
+        try:
+            # Get query parameter for pagination(default: page=1, per_page=10)
+            page = int(request.args.get('page', 1))
+            per_page = int(request.args.get('per_page', 10))
+        except ValidationError:
+            return api_response(True, "Invalid request headers!", None, 400)
+
+        # Join Comment and User tables
+        comments = session.query(Comment, User).join(User, Comment.user_id == User.id).filter(Comment.post_id == post_id).order_by(desc(Comment.created_at)).offset((page - 1)* per_page).limit(per_page).all()
+        if not comments:
+            return api_response(True, "No comments found for this post!", [], 404)
+        
+        result = []
+        for comment, user in comments:
+            result.append({
+                "comment_id": str(comment.id),
+                "content": comment.content,
+                "created_at": comment.created_at,
+                "user": {
+                    "user_id": str(user.id),
+                    "username": user.username,
+                    "email": user.email
+                }
+            })
+        
+        # Count total comments
+        total_comments = session.query(Comment).filter(Comment.post_id == post_id).count()
+
+        return api_response(False, "Fetched comments successfully.", {
+            "comments_data": result,
+            "pagination": {
+                "page": page,
+                "per_page": per_page,
+                "total": total_comments
+            }
+        }, 200)
+    
+    except Exception as e:
+        session.rollback()
+        return api_response(True, "Failed to fetch comments", str(e), 500)
+    finally:
+        session.close()        
