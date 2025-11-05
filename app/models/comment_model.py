@@ -2,6 +2,7 @@ from sqlalchemy import Column, String, Text, ForeignKey, DateTime
 from app.database.db import Base
 import uuid 
 from datetime import datetime, timezone
+from sqlalchemy.orm import relationship
 
 
 class Comment(Base):
@@ -12,7 +13,10 @@ class Comment(Base):
     user_id: str = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     content: str = Column(Text, nullable=False)
     created_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at: datetime =  Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
+    user = relationship("User", backref="comments", lazy="joined")
+    post = relationship("Post", backref="comments", lazy="joined")
     
     def __repr__(self):
         return f"<Comment(ID={self.id}, POST_ID={self.post_id}, USER_ID={self.user_id}, CONTENT={self.content[:20]})>"
