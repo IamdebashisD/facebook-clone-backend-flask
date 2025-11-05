@@ -15,8 +15,6 @@ class Comment(Base):
     created_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at: datetime =  Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
-    user = relationship("User", backref="comments", lazy="joined")
-    post = relationship("Post", backref="comments", lazy="joined")
-    
+
     def __repr__(self):
         return f"<Comment(ID={self.id}, POST_ID={self.post_id}, USER_ID={self.user_id}, CONTENT={self.content[:20]})>"
