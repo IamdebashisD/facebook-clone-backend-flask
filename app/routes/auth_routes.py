@@ -23,11 +23,11 @@ user_schema: UserSchema = UserSchema()          # Initialize schema
 def register() -> Response:
     session: Session = SessionLocal()               # Initialize db
     try:
-        data: Dict = request.get_json()
-        if not data:
+        data: Dict = request.get_json() or {}
+        if not data or not data.get("username") or not data.get("email") or not data.get("password"):
             return jsonify({
                 "error_code": True, 
-                "message": "Invalid JSON data!", 
+                "message": "Invalid JSON data!",
                 "data": None
             }), 400
             
@@ -80,7 +80,7 @@ def register() -> Response:
 def login() -> Response:
     session: Session = SessionLocal()               # Initialize db
     try:
-        data: Dict = request.get_json()
+        data: Dict = request.get_json() or {}
         
         # check if JSON is provided
         if not data or not data.get("email") or not data.get("password"):
