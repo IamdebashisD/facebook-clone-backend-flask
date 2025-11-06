@@ -51,6 +51,19 @@ def add_comment():
 @comment_bp.route("/get_by_post/<string:post_id>", methods=['GET'])
 @token_required
 def get_comments_by_post(post_id):
+    """
+    📝 Endpoint Documentation
+    
+    Endpoint:
+    GET /api/v1/comments/get_by_post/<post_id>
+    ---
+    == Description: ==
+    Fetch all comments for a specific post.This endpoint retrieves a paginated list of 
+    comments associated with a given post ID. Each comment includes essential comment
+    details and information about the user who posted it (such as username and email). 
+    It ensures only authenticated users (with valid JWT tokens) can access the data.
+    """
+
     session = SessionLocal()
     try:
         try:
