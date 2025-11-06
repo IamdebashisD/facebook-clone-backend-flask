@@ -13,7 +13,6 @@ comment_bp = Blueprint("comment_bp", __name__, url_prefix="/api/v1/comments")
 
 @comment_bp.route("/add", methods=['POST'])
 @token_required
-@token_required
 def add_comment():    
     session = SessionLocal()
     comment_schema = CommentSchema()
