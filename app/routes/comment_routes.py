@@ -159,3 +159,37 @@ def get_by_user(user_id):
   finally:
     session.close()
 
+
+@comment_bp.route("/update/<string:comment_id>", methods=['PUT'])
+@token_required
+def update_comment(comment_id):
+    session = SessionLocal()
+    current_user = g.current_user
+    
+    try:
+        '''Get request body'''
+        data = request.get_json() or {}
+        if not data.get("content"):
+            return api_response(True, "Content is required!", None, 400)
+        
+        comment = session.query(Comment).filter(Comment.id == comment_id).first()
+        if not comment:
+            return api_response(True, "Comment not found!", [], 404)
+        
+        if comment.user_id != current_user.id:
+            return api_response(True, "Unauthorized! You can only edit your own comments.", None, 403)
+
+        '''Validate incomming data & Update content'''
+        validate_data = CommentSchema().load(data, partial=True)   # partial=True allows updating specific fields
+        comment.content = validate_data['content']
+        comment.updated_at = datetime.now(timezone.utc)
+
+        session.commit()
+
+        return api_response(False, "Comment updated successfully.", CommentSchema().dump(comment), 200)
+            
+    except Exception as e:
+        session.rollback()
+        return api_response(True, "Failed to update comment.", str(e), 500)
+    finally:
+        session.close()
