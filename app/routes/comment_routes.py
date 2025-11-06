@@ -2,6 +2,7 @@ from flask import Blueprint, request, Response, g
 from app.database.db import SessionLocal
 from app.models.comment_model import Comment
 from app.models.user_model import User
+from app.models.post_model import Post
 from app.schemas.comment_schema import CommentSchema
 from app.utils.response_helper import api_response
 from app.utils.token_required import token_required
@@ -107,3 +108,54 @@ def get_comments_by_post(post_id):
         return api_response(True, "Failed to fetch comments", str(e), 500)
     finally:
         session.close()        
+
+
+@comment_bp.route("/get_by_user/<string:user_id>", methods=['GET'])
+@token_required
+def get_by_user(user_id):
+  session = SessionLocal()
+  current_user = g.current_user
+  try:
+    # Restrict access: user can only view their own comments. (optional)
+    if current_user.id != user_id:
+      return api_response(True, "Unauthorized access!", None, 403)
+
+    try:
+      page = int(request.args.get("page", 1))
+      per_page = int(request.args.get("per_page", 10))
+    except ValueError:
+      return api_response(True, "Invalid pagination parameter", None, 400)
+    
+
+    comments = session.query(Comment, Post).join(Post, Comment.post_id == Post.id).filter(Comment.user_id == user_id).order_by(desc(Comment.created_at)).offset((page - 1)* per_page).limit(per_page).all()
+    
+    if not comments:
+      return api_response(True, "No comments found for this user!", [], 404)
+    
+    result = []
+    for comment, post in comments:
+      result.append({
+        "comment_id": str(comment.id),
+        "content": comment.content,
+        "created_at": comment.created_at,
+        "post": {
+          "post_id": str(post.id),
+          "title": post.title
+        }
+      })
+
+    return api_response(False, "Fetched comments by user successfully", {
+      "comment_data": result,
+      "pagination": {
+        "page": page,
+        "per_page": per_page,
+        "total": session.query(Comment).filter(Comment.user_id == user_id).count()
+      }
+    }, 200)
+  
+  except Exception as e:
+    session.rollback()
+    return api_response(True, "Failed to fetch comments by user", str(e), 500)
+  finally:
+    session.close()
+
