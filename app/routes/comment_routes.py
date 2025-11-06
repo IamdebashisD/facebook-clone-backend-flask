@@ -163,6 +163,7 @@ def get_by_user(user_id):
 @comment_bp.route("/update/<string:comment_id>", methods=['PUT'])
 @token_required
 def update_comment(comment_id):
+<<<<<<< HEAD
     """
     # Endpoint: Update Comment 
     ---
@@ -171,6 +172,8 @@ def update_comment(comment_id):
     == Description: ==
     -- This endpoint allows an authenticated user to update their own comment by providing the new content in the request body.
     """
+=======
+>>>>>>> 25733e6d5e949cac1f9517d557dc1208fee54d44
     session = SessionLocal()
     current_user = g.current_user
     
