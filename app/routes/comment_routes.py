@@ -70,7 +70,7 @@ def get_comments_by_post(post_id):
             # Get query parameter for pagination(default: page=1, per_page=10)
             page = int(request.args.get('page', 1))
             per_page = int(request.args.get('per_page', 10))
-        except ValidationError:
+        except ValueError:
             return api_response(True, "Invalid request headers!", None, 400)
 
         # Join Comment and User tables
