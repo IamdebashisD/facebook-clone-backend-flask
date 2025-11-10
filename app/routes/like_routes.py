@@ -1,0 +1,40 @@
+from flask import Blueprint, g
+from app.database.db import SessionLocal
+from app.models.like_model import Like
+from app.models.post_model import Post
+from app.models.user_model import User
+from app.utils.token_required import token_required
+from app.utils.response_helper import api_response
+
+
+like_bp = Blueprint("like_bp", __name__, url_prefix="/api/v1/like")
+
+@like_bp.route("/toggle/<string:post_id>", methods=['POST'])
+@token_required
+def toggle_like(post_id):
+    session = SessionLocal()
+    current_user = g.current_user
+
+    try:
+        post = session.query(Post).filter(Post.id == post_id).first()
+        if not post:
+            return api_response(True, "Post not found!", None, 404)
+        
+        like = session.query(Like).filter(Like.post_id == post_id, Like.user_id == current_user.id).first()
+        
+        if like:
+            session.delete(like)
+            session.commit()
+            return api_response(False, "Liked removed", {"liked": False}, 200)
+        else:
+            new_like = Like(post_id=post_id, user_id=current_user.id)
+            session.add(new_like)
+            session.commit()
+            return api_response(False, "Post liked", {"liked": True}, 201)
+        
+    except Exception as e:
+        session.rollback()
+        return api_response(True, "Failed to toggle like!", str(e), 500)
+    finally:
+        session.close()
+
