@@ -38,3 +38,34 @@ def toggle_like(post_id):
     finally:
         session.close()
 
+
+@like_bp.route("/count/<string:post_id>", methods=['GET'])
+@token_required
+def get_like_count(post_id):
+    session = SessionLocal()
+
+    try:
+        # Check if post exists
+        post = session.query(Post).filter(Post.id == post_id).first()
+        if not post:
+            return api_response(True, "Post not found!", None, 404)
+
+        # Count likes for the post
+        like_count = session.query(Like).filter(Like.post_id == post_id).count()
+
+        return api_response(
+            False,
+            "Total likes fetched successfully.",
+            {
+                "post_id": post_id, 
+                "total_likes": like_count
+            },
+            200
+        )
+
+    except Exception as e:
+        session.rollback()
+        return api_response(True, "Failed to fetch like count.", str(e), 500)
+
+    finally:
+        session.close()
