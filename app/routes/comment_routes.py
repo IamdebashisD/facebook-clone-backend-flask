@@ -113,51 +113,51 @@ def get_comments_by_post(post_id):
 @comment_bp.route("/get_by_user/<string:user_id>", methods=['GET'])
 @token_required
 def get_by_user(user_id):
-  session = SessionLocal()
-  current_user = g.current_user
-  try:
-    # Restrict access: user can only view their own comments. (optional)
-    if current_user.id != user_id:
-      return api_response(True, "Unauthorized access!", None, 403)
-
+    session = SessionLocal()
+    current_user = g.current_user
     try:
-      page = int(request.args.get("page", 1))
-      per_page = int(request.args.get("per_page", 10))
-    except ValueError:
-      return api_response(True, "Invalid pagination parameter", None, 400)
-    
+        # Restrict access: user can only view their own comments. (optional)
+        if current_user.id != user_id:
+            return api_response(True, "Unauthorized access!", None, 403)
 
-    comments = session.query(Comment, Post).join(Post, Comment.post_id == Post.id).filter(Comment.user_id == user_id).order_by(desc(Comment.created_at)).offset((page - 1)* per_page).limit(per_page).all()
-    
-    if not comments:
-      return api_response(True, "No comments found for this user!", [], 404)
-    
-    result = []
-    for comment, post in comments:
-      result.append({
-        "comment_id": str(comment.id),
-        "content": comment.content,
-        "created_at": comment.created_at,
-        "post": {
-          "post_id": str(post.id),
-          "title": post.title
-        }
-      })
+        try:
+            page = int(request.args.get("page", 1))
+            per_page = int(request.args.get("per_page", 10))
+        except ValueError:
+            return api_response(True, "Invalid pagination parameter", None, 400)
+        
 
-    return api_response(False, "Fetched comments by user successfully", {
-      "comment_data": result,
-      "pagination": {
-        "page": page,
-        "per_page": per_page,
-        "total": session.query(Comment).filter(Comment.user_id == user_id).count()
-      }
-    }, 200)
-  
-  except Exception as e:
-    session.rollback()
-    return api_response(True, "Failed to fetch comments by user", str(e), 500)
-  finally:
-    session.close()
+        comments = session.query(Comment, Post).join(Post, Comment.post_id == Post.id).filter(Comment.user_id == user_id).order_by(desc(Comment.created_at)).offset((page - 1)* per_page).limit(per_page).all()
+        
+        if not comments:
+            return api_response(True, "No comments found for this user!", [], 404)
+        
+        result = []
+        for comment, post in comments:
+            result.append({
+                "comment_id": str(comment.id),
+                "content": comment.content,
+                "created_at": comment.created_at,
+                "post": {
+                    "post_id": str(post.id),
+                    "title": post.title
+                }
+            })
+
+        return api_response(False, "Fetched comments by user successfully", {
+            "comment_data": result,
+            "pagination": {
+                "page": page,
+                "per_page": per_page,
+                "total": session.query(Comment).filter(Comment.user_id == user_id).count()
+            }
+        }, 200)
+    
+    except Exception as e:
+        session.rollback()
+        return api_response(True, "Failed to fetch comments by user", str(e), 500)
+    finally:
+        session.close()
 
 
 @comment_bp.route("/update/<string:comment_id>", methods=['PUT'])
@@ -204,3 +204,29 @@ def update_comment(comment_id):
         return api_response(True, "Failed to update comment.", str(e), 500)
     finally:
         session.close()
+
+
+
+@comment_bp.route("/delete/<string:comment_id>", methods=['DELETE'])
+@token_required
+def delete_comment(comment_id):
+    session = SessionLocal()
+    current_user = g.current_user
+    
+    try:
+      comment = session.query(Comment).filter(Comment.id == comment_id).first()
+      if not comment:
+          return api_response(True, "Commnet not found!", None, 404)
+      if comment.user_id != current_user.id:
+          return api_response(True, "Unauthorized! You can only delete your own comments.", None, 403)
+      
+      session.delete(comment)
+      session.commit()
+      
+      return api_response(False, "Comment deleted successfully!", None, 200)
+    except Exception as e:
+        session.rollback()
+        return api_response(True, "Failed to delete comment", str(e), 500)
+    finally:
+        session.close()
+    
