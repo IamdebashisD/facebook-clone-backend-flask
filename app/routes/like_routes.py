@@ -93,15 +93,15 @@ def is_liked(post_id):
     try:
         post_exists = session.query(Post).filter(Post.id == post_id).first()
         if not post_exists:
-            return api_response(True, "Post not found", None, 404)
+            return api_response(True, "Post not found!", None, 404)
         
         is_liked = session.query(Like).filter(Like.post_id == post_id, Like.user_id == current_user.id).first()
-        liked = is_liked is not None
+        liked = is_liked is not None       # Convert to boolean
         return api_response(False, "Like status fetched successfully", {"liked": liked}, 200)
         
     except Exception as e:
         session.rollback()
-        return api_response(True, "Failed to fetch like status!", str(e), 500)
+        return api_response(True, "Failed to fetch like status", str(e), 500)
     finally:
         session.close()   
         
@@ -131,7 +131,7 @@ def get_post_likes_With_users(post_id):
         
     except Exception as e:
         session.rollback()
-        return api_response(True, "Failed to fetch likes data!", str(e), 500)
+        return api_response(True, "Failed to fetch likes data", str(e), 500)
     finally:
         session.close() 
         
