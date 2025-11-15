@@ -69,3 +69,41 @@ def get_like_count(post_id):
 
     finally:
         session.close()
+
+
+@like_bp.route("/is_liked/<string:post_id>", methods=["GET"])
+@token_required
+def is_liked(post_id):
+    """
+    Endpoint:
+    GET /likes/is-liked/<post_id>
+
+    Description:
+    Returns whether the current user has already liked the post.
+
+    -- json --
+    {
+        "error_code": false,
+        "message": "Like status fetched",
+        "data": { "liked": true }
+    }
+    """
+    session = SessionLocal()
+    current_user = g.current_user    
+    try:
+        post_exists = session.query(Post).filter(Post.id == post_id).first()
+        if not post_exists:
+            return api_response(True, "Post not found", None, 404)
+        
+        is_liked = session.query(Like).filter(Like.post_id == post_id, Like.user_id == current_user.id).first()
+        liked = is_liked is not None
+        return api_response(False, "Like status fetched successfully", {"liked": liked}, 200)
+        
+    except Exception as e:
+        session.rollback()
+        return api_response(True, "Failed to fetch like status!", str(e), 500)
+    finally:
+        session.close()   
+        
+        
+        
