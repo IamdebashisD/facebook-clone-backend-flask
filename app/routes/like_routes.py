@@ -97,7 +97,7 @@ def is_liked(post_id):
         
         is_liked = session.query(Like).filter(Like.post_id == post_id, Like.user_id == current_user.id).first()
         liked = is_liked is not None       # Convert to boolean
-        return api_response(False, "Like status fetched successfully", {"liked": liked}, 200)
+        return api_response(False, "Like status fetched successfully", {"is_liked": liked}, 200)
         
     except Exception as e:
         session.rollback()
