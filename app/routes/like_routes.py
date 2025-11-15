@@ -105,5 +105,34 @@ def is_liked(post_id):
     finally:
         session.close()   
         
+
+@like_bp.route("/list_of_users_liked_to_a_post/<string:post_id>", methods=['GET'])
+@token_required
+def get_post_likes_With_users(post_id):
+    session = SessionLocal()
+    try:
+        # check if a post exist
+        post = session.query(Post).filter(Post.id == post_id).first()
+        if not post:
+            return api_response(True, "Post not found!", None, 404)
+        
+        likes = session.query(Like, User).join(User, Like.user_id == User.id).filter(Like.post_id == post_id).all()
+        
+        total_likes = len(likes)
+        
+        users = []
+        for like, user in likes:
+            users.append({
+                "user_id": user.id,
+                "username": user.username
+            })
+        
+        return api_response(False, "Post likes fetched successfully", {"total_likes": total_likes, "users": users}, 200)
+        
+    except Exception as e:
+        session.rollback()
+        return api_response(True, "Failed to fetch likes data!", str(e), 500)
+    finally:
+        session.close() 
         
         
