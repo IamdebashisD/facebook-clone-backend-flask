@@ -12,7 +12,7 @@ class Comment(Base):
     post_id: str = Column(String(36), ForeignKey("posts.id", ondelete="CASCADE"), nullable=False) 
     
     # Parent comment -> enables replies
-    parent_id: str = Column(String(36), ForeignKey("comments.id", ondelete="CASCASE"), nullable=True)
+    parent_id: str = Column(String(36), ForeignKey("comments.id", ondelete="CASCADE"), nullable=True)
     
     user_id: str = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     content: str = Column(Text, nullable=False)
@@ -20,7 +20,10 @@ class Comment(Base):
     updated_at: datetime =  Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationship: comment → replies
-    replies = relationship("comments", backref="replies", cascade="all, delete-orphan", lazy="joined")
+    replies = relationship("Comment", backref="parent", cascade="all, delete-orphan", lazy="joined")
     
     def __repr__(self):
-        return f"<Comment(ID={self.id}, POST_ID={self.post_id}, USER_ID={self.user_id}, CONTENT={self.content[:20]})>"
+        return (
+            f"<Comment(ID={self.id}, POST_ID={self.post_id}, USER_ID={self.user_id}, CONTENT={self.content[:20]})>",
+            f"<PRENT_ID={self.parent_id}, Content={self.content[:20]}>"
+        )
