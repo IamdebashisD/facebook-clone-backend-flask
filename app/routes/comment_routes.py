@@ -83,28 +83,53 @@ def get_comments_by_post(post_id):
             return api_response(True, "Invalid request headers!", None, 400)
 
         # Join Comment and User tables
-        comments = session.query(Comment, User).join(User, Comment.user_id == User.id).filter(Comment.post_id == post_id).order_by(desc(Comment.created_at)).offset((page - 1)* per_page).limit(per_page).all()
-        if not comments:
+        top_level_comments = session.query(Comment).filter(Comment.post_id == post_id, Comment.parent_id.is_(None)).order_by(desc(Comment.created_at)).offset((page - 1)* per_page).limit(per_page).all()
+        if not top_level_comments:
             return api_response(True, "No comments found for this post!", [], 404)
         
-        result = []
-        for comment, user in comments:
-            result.append({
-                "comment_id": str(comment.id),
-                "content": comment.content,
-                "created_at": comment.created_at,
-                "user": {
-                    "user_id": str(user.id),
-                    "username": user.username,
-                    "email": user.email
-                }
-            })
+        final_output = []
         
-        # Count total comments
-        total_comments = session.query(Comment).filter(Comment.post_id == post_id).count()
+        for comment in top_level_comments:
+            # 1. Fetch user of this comment 
+            user = session.query(User).filter(User.id == comment.user_id).first()
+            
+            # 2. Fetch replies for this comment
+            
+            replies = session.query(Comment).filter(Comment.parent_id == Comment.id).order_by(desc(Comment.created_at)).all()
+
+            reply_list = []
+            
+            for reply in replies:
+                reply_user = session.query(User).filter(User.id == reply.user_id).first()
+                
+                reply_list.append({
+                    'id': str(reply.id),
+                    'post_id': reply.post_id,
+                    'content': reply.content,
+                    'created_at': reply.created_at,
+                    'user': {
+                        'id': str(reply_user.id),
+                        'username': reply_user.username
+                    }
+                })
+            
+            final_output.append({
+                'id': str(comment.id),
+                'post_id': comment.post_id,
+                'content': comment.content,
+                'created_at': comment.created_at,
+                'user': {
+                    'id': user.id,
+                    'username': user.username
+                },
+                'replies': reply_list
+            })
+            
+        total_comments = session.query(Comment).filter(Comment.post_id == post_id, Comment.parent_id.is_(None)).count()
+
 
         return api_response(False, "Fetched comments successfully.", {
-            "comments_data": result,
+            "comments_data": final_output,
             "pagination": {
                 "page": page,
                 "per_page": per_page,
