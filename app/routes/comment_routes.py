@@ -27,7 +27,7 @@ def add_comment():
         # Validate and deserialized data
         validate_data =  comment_schema.load(data)
         
-        parent_id = data.get("parent_id")
+        parent_id = data.get("parent_id", None)
         
         if parent_id:
             parent_comment= session.query(Comment).filter(Comment.id == Comment.parent_id).first()
