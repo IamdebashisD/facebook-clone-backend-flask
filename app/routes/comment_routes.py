@@ -27,11 +27,20 @@ def add_comment():
         # Validate and deserialized data
         validate_data =  comment_schema.load(data)
         
+        parent_id = data.get("parent_id")
+        
+        if parent_id:
+            parent_comment= session.query(Comment).filter(Comment.id == Comment.parent_id).first()
+            if not parent_comment:
+                return api_response(True, "Parent comment not found!", None, 404)
+            
         new_comment = Comment(
             post_id = validate_data["post_id"],
             content = validate_data["content"],
-            user_id = current_user.id
+            user_id = current_user.id,
+            parent_id = parent_id
         )
+        
         session.add(new_comment)
         session.commit()
         
