@@ -95,7 +95,7 @@ def get_comments_by_post(post_id):
             
             # 2. Fetch replies for this comment
             
-            replies = session.query(Comment).filter(Comment.parent_id == Comment.id).order_by(desc(Comment.created_at)).all()
+            replies = session.query(Comment).filter(Comment.parent_id == comment.id).order_by(desc(Comment.created_at)).all()
 
             reply_list = []
             
