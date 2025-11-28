@@ -19,11 +19,27 @@ class Comment(Base):
     created_at: datetime = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at: datetime =  Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
+    
+    # Self-referencing relationships
+    parent = relationship(
+        "Comment",
+        remote_side=[id],
+        back_populates="replies"
+    )
+    
+    
     # Relationship: comment → replies
-    replies = relationship("Comment", backref="parent", cascade="all, delete-orphan", lazy="joined")
+    replies = relationship(
+        "Comment", 
+        back_populates="parent", 
+        cascade="all, delete-orphan", 
+        lazy="joined",
+        single_parent=True
+    )
+    
     
     def __repr__(self):
         return (
-            f"<Comment(ID={self.id}, POST_ID={self.post_id}, USER_ID={self.user_id}, CONTENT={self.content[:20]})>",
-            f"<PRENT_ID={self.parent_id}, Content={self.content[:20]}>"
+            f"<Comment ID={self.id}, POST_ID={self.post_id}, USER_ID={self.user_id}, CONTENT={self.content[:20]}>, "
+            f"<PARENT_ID={self.parent_id}, Content={self.content[:20]}>"
         )
