@@ -30,7 +30,7 @@ def add_comment():
         parent_id = data.get("parent_id", None)
         
         if parent_id:
-            parent_comment= session.query(Comment).filter(Comment.id == Comment.parent_id).first()
+            parent_comment= session.query(Comment).filter(Comment.id == parent_id).first()
             if not parent_comment:
                 return api_response(True, "Parent comment not found!", None, 404)
             
