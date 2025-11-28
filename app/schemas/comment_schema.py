@@ -6,7 +6,6 @@ class userMiniSchema(Schema):
     username = fields.Str(required=True)
     
     
-    
 class replySchema(Schema):
     id = fields.Str(dump_only=True)
     post_id = fields.Str(required=True)
@@ -30,6 +29,7 @@ class CommentSchema(Schema):
     
     id = fields.Str(dump_only=True)
     post_id = fields.Str(required=True)
+    parent_id = fields.Str(load_only=True, allow_none=True)
     user_id = fields.Str(dump_only=True)
     user = fields.Nested(userMiniSchema)
     
