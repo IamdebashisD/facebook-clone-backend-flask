@@ -164,7 +164,7 @@ def get_by_user(user_id):
         comments = session.query(Comment, Post).join(Post, Comment.post_id == Post.id).filter(Comment.user_id == user_id).order_by(desc(Comment.created_at)).offset((page - 1)* per_page).limit(per_page).all()
         
         if not comments:
-            return api_response(True, "No comments found for this user!", [], 404)
+            return api_response(False, "No comments found for this user!", [], 200)
         
         result = []
         for comment, post in comments:
