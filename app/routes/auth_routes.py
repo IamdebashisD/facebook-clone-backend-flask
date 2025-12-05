@@ -60,16 +60,12 @@ def register() -> Response:
         return jsonify({
             "error_code": False,
             "message": "User registered successfully",
-            "data": user_schema.dump(new_user),
+            "success": True,
         }), 201
 
     except Exception as e:
-        return jsonify({
-            "error_code": True,
-            "message": "Registration failed",
-            "data": str(e)
-        }), 500
-        
+        session.rollback()
+        return api_response(True, "Registration Failed!", str(e), 500)
     finally:
         session.close()
         
