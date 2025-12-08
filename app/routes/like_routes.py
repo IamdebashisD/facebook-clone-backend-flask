@@ -9,7 +9,7 @@ from app.utils.response_helper import api_response
 
 like_bp = Blueprint("like_bp", __name__, url_prefix="/api/v1/like")
 
-@like_bp.route("/toggle/<string:post_id>", methods=['POST'])
+@like_bp.route("/toggle_like/<string:post_id>", methods=['POST'])
 @token_required
 def toggle_like(post_id):
     session = SessionLocal()
