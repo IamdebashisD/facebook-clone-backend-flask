@@ -63,7 +63,7 @@ def update_post(post_id) -> Response:
     current_user = g.current_user
     
     try:
-        data: dict = request.get_json()
+        data: dict = request.get_json() or {}
         if not data:
             return api_response(True, "Invalid JSON format!", None, 400)
         
