@@ -1,5 +1,7 @@
 from flask import Blueprint, request, Response, g
 from app.models.post_model import Post
+from app.models.user_model import User
+from app.models.like_model import Like
 from app.schemas.post_schema import PostSchema
 from app.database.db import SessionLocal
 from app.utils.token_required import token_required
@@ -117,7 +119,7 @@ def delete_post(post_id) -> Response:
         
 
 @post_bp.route("/get_all_posts", methods=['GET'])
-@token_required
+# @token_required
 def get_all_post():
     """
     Get all posts with optional search, sorting, and pagination.
@@ -154,7 +156,7 @@ def get_all_post():
         search = request.args.get("search", None)
         
         # Build Base query
-        query = session.query(Post)
+        query = session.query(Post, User).join(User, Post.user_id == User.id)
         
         if search:
             query = query.filter(
@@ -171,6 +173,21 @@ def get_all_post():
         if not posts:
             return api_response(False, "No posts found", [], 404)
         
+        # unpacking data
+        final_post_response_with_user_data = []
+        for post, user in query:
+            final_post_response_with_user_data.append({
+                "post_id": str(post.id),
+                "title": post.title,
+                "content": post.content,
+                "created_at": post.created_at,
+                "user":{
+                    "userId": post.user_id,
+                    "username": user.username
+                }
+            })
+            
+        
         # Serialize post via marshmallow schema
         post_schema = PostSchema(many=True)
         post_data = post_schema.dump(posts)
@@ -179,7 +196,7 @@ def get_all_post():
             False,
             "Fetch all post successfully.",
             {
-                "post_data": post_data,
+                "post_data": final_post_response_with_user_data,
                 "pagination": {
                     "page": page,
                     "per_page": per_page,
