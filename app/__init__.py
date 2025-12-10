@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from .database.db import Base, engine
 from app.routes import all_blueprints
 from flask_mail import Mail
@@ -19,6 +20,14 @@ mail = Mail()
 
 def create_app():
     app = Flask(__name__)
+    
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": ["http://localhost:5173"]}},
+        supports_credentials=True,
+        allow_headers=["Content-type", "Authorization"]
+    )
+    
     app.config.from_object(Config)
     mail.init_app(app)
     
