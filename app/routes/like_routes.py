@@ -5,6 +5,7 @@ from app.models.post_model import Post
 from app.models.user_model import User
 from app.utils.token_required import token_required
 from app.utils.response_helper import api_response
+from sqlalchemy.exc import IntegrityError
 
 
 like_bp = Blueprint("like_bp", __name__, url_prefix="/api/v1/like")
@@ -32,6 +33,10 @@ def toggle_like(post_id):
             session.commit()
             return api_response(False, "Post liked", {"liked": True}, 201)
         
+    except IntegrityError:
+        session.rollback()
+        return api_response(False, "Already liked", {"liked": True}, 200)
+    
     except Exception as e:
         session.rollback()
         return api_response(True, "Failed to toggle like!", str(e), 500)
