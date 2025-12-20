@@ -39,11 +39,7 @@ def register() -> Response:
         ).first()
         
         if existing_user:
-            return jsonify({
-                "error_code": True,
-                "message": "Username or email already exists",
-                "data": None
-            }), 400
+            return api_response(True, "Username or email already exists", None, 400)
             
         # Create new user instance
         new_user: User = User(**validate_input)
