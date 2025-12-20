@@ -119,7 +119,7 @@ def delete_post(post_id) -> Response:
         
 
 @post_bp.route("/get_all_posts", methods=['GET'])
-# @token_required
+@token_required
 def get_all_post():
     """
     Get all posts with optional search, sorting, and pagination.
