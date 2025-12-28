@@ -1,4 +1,5 @@
 from marshmallow import Schema, fields, validate
+from app.schemas.fields import UTCDateTime
 
 
 class userMiniSchema(Schema):
@@ -18,8 +19,8 @@ class replySchema(Schema):
             "required": "Content is required",
         }
     )
-    created_at = fields.DateTime(dump_only=True)
-    updated_at = fields.DateTime(dump_only=True)
+    created_at = UTCDateTime(dump_only=True)
+    updated_at = UTCDateTime(dump_only=True)
     
     
     
@@ -43,5 +44,5 @@ class CommentSchema(Schema):
     # List of replies
     replies = fields.List(fields.Nested(replySchema), dump_only=True)
     
-    created_at = fields.DateTime(dump_only=True)
-    updated_at = fields.DateTime(dump_only=True)
+    created_at = UTCDateTime(dump_only=True)
+    updated_at = UTCDateTime(dump_only=True)
