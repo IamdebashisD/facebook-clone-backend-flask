@@ -145,6 +145,7 @@ def get_all_post():
     - `500 Internal Server Error`: Unexpected server error
     """
     session = SessionLocal()
+    current_user = g.current_user
     try:
         try:     
             # Get query parameters (default: page=1, per_page=10)
@@ -172,15 +173,25 @@ def get_all_post():
         posts = query.offset((page -1) * per_page).limit(per_page).all()
         if not posts:
             return api_response(False, "No posts found", [], 404)
+            
+        
+        
         
         # unpacking data
         final_post_response_with_user_data = []
         for post, user in query:
+            likes_count = session.query(Like).filter(Like.post_id == post.id).count()
+            is_liked = session.query(Like).filter(
+                Like.post_id == post.id,
+                Like.user_id == current_user.id
+                ).first() is not None
             final_post_response_with_user_data.append({
                 "post_id": str(post.id),
                 "title": post.title,
                 "content": post.content,
                 "created_at": post.created_at,
+                "is_liked": is_liked,
+                "likes_count": likes_count,
                 "user":{
                     "userId": post.user_id,
                     "username": user.username
