@@ -9,6 +9,7 @@ from app.utils.token_required import token_required
 from datetime import datetime, timezone
 from marshmallow import ValidationError
 from sqlalchemy import desc
+from app.utils.to_iso_utc import to_iso_utc
 
 comment_bp = Blueprint("comment_bp", __name__, url_prefix="/api/v1/comments")
 
@@ -23,6 +24,7 @@ def add_comment():
         data = request.get_json() or {}
         if not data or not data.get("post_id") or not data.get("content"):
             return api_response(True, "Post_id and Content are required!")
+        print(data)
         
         # Validate and deserialized data
         validate_data =  comment_schema.load(data)
@@ -81,11 +83,18 @@ def get_comments_by_post(post_id):
             per_page = int(request.args.get('per_page', 10))
         except ValueError:
             return api_response(True, "Invalid request headers!", None, 400)
+        
+        if not session.query(Post).filter(Post.id == post_id).first():
+            return api_response(True,'post does not exist!', None, 404)
 
         # Join Comment and User tables
-        top_level_comments = session.query(Comment).filter(Comment.post_id == post_id, Comment.parent_id.is_(None)).order_by(desc(Comment.created_at)).offset((page - 1)* per_page).limit(per_page).all()
+        top_level_comments = (session.query(Comment)
+                              .filter(Comment.post_id == post_id, Comment.parent_id.is_(None))
+                              .order_by(desc(Comment.created_at))
+                              .offset((page - 1)* per_page)
+                              .limit(per_page).all())
         if not top_level_comments:
-            return api_response(True, "No comments found for this post!", [], 404)
+            return api_response(False, "No comments found for this post!", [], 200)
         
         final_output = []
         
@@ -106,7 +115,8 @@ def get_comments_by_post(post_id):
                     'id': str(reply.id),
                     'post_id': reply.post_id,
                     'content': reply.content,
-                    'created_at': reply.created_at,
+                    'created_at': to_iso_utc(reply.created_at),
+                    'updated_at': to_iso_utc(reply.updated_at),
                     'user': {
                         'id': str(reply_user.id),
                         'username': reply_user.username
@@ -117,7 +127,8 @@ def get_comments_by_post(post_id):
                 'id': str(comment.id),
                 'post_id': comment.post_id,
                 'content': comment.content,
-                'created_at': comment.created_at,
+                'created_at': to_iso_utc(comment.created_at),
+                'updated_at': to_iso_utc(comment.updated_at),
                 'user': {
                     'id': user.id,
                     'username': user.username
