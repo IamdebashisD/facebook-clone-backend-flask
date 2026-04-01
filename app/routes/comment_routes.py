@@ -24,7 +24,6 @@ def add_comment():
         data = request.get_json() or {}
         if not data or not data.get("post_id") or not data.get("content"):
             return api_response(True, "Post_id and Content are required!")
-        print(data)
         
         # Validate and deserialized data
         validate_data =  comment_schema.load(data)
