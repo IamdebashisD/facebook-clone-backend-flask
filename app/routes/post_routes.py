@@ -36,7 +36,8 @@ def upload_post() -> Response:
             content = validate_data["content"],
             user_id = current_user.id
         )
-        print("new_post ---->> ",new_post)
+        # print("new_post ---->> ",new_post)
+        user = session.query(User).filter(User.id == current_user.id).first()
         
         session.add(new_post)
         session.flush()
