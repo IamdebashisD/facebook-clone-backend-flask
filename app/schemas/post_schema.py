@@ -1,4 +1,5 @@
 from marshmallow import Schema, fields, validate
+from app.schemas.fields import UTCDateTime
 
 class PostSchema(Schema):
     '''
@@ -21,4 +22,4 @@ class PostSchema(Schema):
         }
     )
     user_id = fields.Str(dump_only=True)
-    created_at = fields.DateTime(dump_only=True)
+    created_at = UTCDateTime(dump_only=True)
